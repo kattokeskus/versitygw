@@ -793,6 +793,10 @@ func (p *Posix) fileToObjVersions(bucket string) backend.GetVersionsFunc {
 				return nil, fmt.Errorf("get fileinfo: %w", err)
 			}
 
+			if etag == "" {
+				etag = fi.ModTime().UTC().Format(time.RFC3339)
+			}
+
 			key := path + "/"
 			// Directory objects don't contain data
 			size := int64(0)
@@ -827,10 +831,6 @@ func (p *Posix) fileToObjVersions(bucket string) backend.GetVersionsFunc {
 		// so this will just set etag to "" if its not already set
 		etag := string(etagBytes)
 
-		if etag == "" {
-			etag = "generated"
-		}
-
 		// If the object doesn't have versionId, it's 'null'
 		versionId := "null"
 		versionIdBytes, err := p.meta.RetrieveAttribute(nil, bucket, path, versionIdKey)
@@ -847,6 +847,10 @@ func (p *Posix) fileToObjVersions(bucket string) backend.GetVersionsFunc {
 			}
 			if err != nil {
 				return nil, fmt.Errorf("get fileinfo: %w", err)
+			}
+
+			if etag == "" {
+				etag = fi.ModTime().UTC().Format(time.RFC3339)
 			}
 
 			size := fi.Size()
@@ -946,6 +950,11 @@ func (p *Posix) fileToObjVersions(bucket string) backend.GetVersionsFunc {
 				// note: meta.ErrNoSuchKey will return etagBytes = []byte{}
 				// so this will just set etag to "" if its not already set
 				etag := string(etagBytes)
+
+				if etag == "" {
+					etag = nf.ModTime().UTC().Format(time.RFC3339)
+				}
+
 				size := nf.Size()
 				nullVersionIdObj = &types.ObjectVersion{
 					ETag:         &etag,
@@ -1045,6 +1054,10 @@ func (p *Posix) fileToObjVersions(bucket string) backend.GetVersionsFunc {
 			// note: meta.ErrNoSuchKey will return etagBytes = []byte{}
 			// so this will just set etag to "" if its not already set
 			etag := string(etagBytes)
+
+			if etag == "" {
+				etag = f.ModTime().UTC().Format(time.RFC3339)
+			}
 
 			isDel, err := p.isObjDeleteMarker(versionPath, versionId)
 			if err != nil {
@@ -1851,6 +1864,10 @@ func (p *Posix) ListParts(_ context.Context, input *s3.ListPartsInput) (s3respon
 		fi, err := os.Lstat(filepath.Join(bucket, partPath))
 		if err != nil {
 			continue
+		}
+
+		if etag == "" {
+			etag = fi.ModTime().UTC().Format(time.RFC3339)
 		}
 
 		parts = append(parts, s3response.Part{
@@ -2855,6 +2872,10 @@ func (p *Posix) GetObject(_ context.Context, input *s3.GetObjectInput) (*s3.GetO
 			etag = ""
 		}
 
+		if etag == "" {
+			etag = fi.ModTime().UTC().Format(time.RFC3339)
+		}
+
 		var tagCount *int32
 		tags, err := p.getAttrTags(bucket, object)
 		if err != nil && !errors.Is(err, s3err.GetAPIError(s3err.ErrBucketTaggingNotFound)) {
@@ -2900,6 +2921,10 @@ func (p *Posix) GetObject(_ context.Context, input *s3.GetObjectInput) (*s3.GetO
 	etag := string(b)
 	if err != nil {
 		etag = ""
+	}
+
+	if etag == "" {
+		etag = fi.ModTime().UTC().Format(time.RFC3339)
 	}
 
 	var tagCount *int32
@@ -2985,6 +3010,9 @@ func (p *Posix) HeadObject(ctx context.Context, input *s3.HeadObjectInput) (*s3.
 		etag := string(b)
 		if err != nil {
 			etag = ""
+		}
+		if etag == "" {
+			etag = part.ModTime().UTC().Format(time.RFC3339)
 		}
 		partsCount := int32(len(ents))
 		size := part.Size()
@@ -3073,6 +3101,10 @@ func (p *Posix) HeadObject(ctx context.Context, input *s3.HeadObjectInput) (*s3.
 	etag := string(b)
 	if err != nil {
 		etag = ""
+	}
+
+	if etag == "" {
+		etag = fi.ModTime().UTC().Format(time.RFC3339)
 	}
 
 	size := fi.Size()
@@ -3359,6 +3391,10 @@ func (p *Posix) fileToObj(bucket string) backend.GetObjFunc {
 				return s3response.Object{}, fmt.Errorf("get fileinfo: %w", err)
 			}
 
+			if etag == "" {
+				etag = fi.ModTime().UTC().Format(time.RFC3339)
+			}
+
 			size := int64(0)
 			mtime := fi.ModTime()
 
@@ -3396,6 +3432,10 @@ func (p *Posix) fileToObj(bucket string) backend.GetObjFunc {
 		}
 		if err != nil {
 			return s3response.Object{}, fmt.Errorf("get fileinfo: %w", err)
+		}
+
+		if etag == "" {
+			etag = fi.ModTime().UTC().Format(time.RFC3339)
 		}
 
 		size := fi.Size()
