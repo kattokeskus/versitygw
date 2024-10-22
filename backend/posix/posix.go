@@ -827,6 +827,10 @@ func (p *Posix) fileToObjVersions(bucket string) backend.GetVersionsFunc {
 		// so this will just set etag to "" if its not already set
 		etag := string(etagBytes)
 
+		if etag == "" {
+			etag = "generated"
+		}
+
 		// If the object doesn't have versionId, it's 'null'
 		versionId := "null"
 		versionIdBytes, err := p.meta.RetrieveAttribute(nil, bucket, path, versionIdKey)
